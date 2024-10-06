@@ -3,7 +3,8 @@ from application.interfaces.presenters.snmp_presenter import SnmpPresenter
 
 class SnmpController:
     """
-    A controller class to handle user inputs and interact with the SnmpPresenter for SNMP operations.
+    A controller class to handle user inputs and interact with the
+    SnmpPresenter for SNMP operations.
 
     Attributes:
         presenter (SnmpPresenter): The SNMP presenter to handle SNMP operations.

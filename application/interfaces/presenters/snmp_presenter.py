@@ -30,7 +30,8 @@ class SnmpPresenter:
         if self.version == 'v3':
             return UsmUserData(self.user, self.auth_key, self.priv_key)
         if self.version in ['v1', 'v2c']:
-            return CommunityData(self.community, mpModel=0 if self.version == 'v1' else 1)
+            # return CommunityData(self.community, mpModel=0 if self.version == 'v1' else 1)
+            return CommunityData(self.community)
         raise ValueError('Unsupported SNMP version.')
 
     def get(self, oid):
@@ -43,15 +44,30 @@ class SnmpPresenter:
         Returns:
             str: The value retrieved from the SNMP agent.
         """
-        error_indication, error_status, error_index, var_binds = next(
-            getCmd(
-                SnmpEngine(),
-                self._get_auth(),
-                UdpTransportTarget((self.target, self.port)),
-                ContextData(),
-                ObjectType(ObjectIdentity(oid))
-            )
-        )
+        # error_indication, error_status, error_index, var_binds = next(
+        #     getCmd(
+        #         SnmpEngine(),
+        #         self._get_auth(),
+        #         UdpTransportTarget((self.target, self.port)),
+        #         ContextData(),
+        #         ObjectType(ObjectIdentity('SNMPv2-MIB', 'sysDescr', 0))
+        #     )
+        # )
+        #
+
+        iterator = getCmd(SnmpEngine(),
+                          CommunityData('public'),
+                          UdpTransportTarget(('192.168.1.231', 161)),
+                          ContextData(),
+                          ObjectType(ObjectIdentity('SNMPv2-MIB', 'sysDescr', 0)))
+
+        error_indication, error_status, error_index, var_binds = next(iterator)
+
+        if error_status:  # SNMP agent errors
+            print('%s at %s' % (error_status.prettyPrint(), var_binds[int(error_index) - 1] if error_index else '?'))
+        else:
+            for varBind in var_binds:  # SNMP response contents
+                print(' = '.join([x.prettyPrint() for x in varBind]))
 
         if error_indication:
             raise Exception(error_indication)

@@ -9,7 +9,7 @@ from flask_cors import CORS
 
 from infrastructure.data.args import Args
 from infrastructure.data.env_reader import EnvReader
-from infrastructure.data.token import generate_token
+# from infrastructure.data.token import generate_token
 from application.use_cases.snmp_scanner import SnmpScanner
 from application.interfaces.controllers.snmp_controller import SnmpController
 
@@ -29,21 +29,16 @@ def ping():
 
 @app.route('/snmp/scan', methods=['GET'])
 def snmp_new():
-    # Parse required arguments
-    subnet = request.form.get("subnet", default=None, type=str)
-    version = request.form.get("version", default="v2c", type=str)
-    community = request.form.get("community", default="public", type=str)
-    user = request.form.get("user", default=None, type=str)
-    auth_key = request.form.get("authentication_key", default=None, type=str)
-    priv_key = request.form.get("private_key", default=None, type=str)
-
+    """
+    Snmp scan endpoint
+    """
     scanner = SnmpScanner(
-        subnet=subnet,
-        version=version,
-        community=community,
-        user=user,
-        auth_key=auth_key,
-        priv_key=priv_key
+        subnet=request.form.get("subnet", default=None, type=str),
+        version=request.form.get("version", default="v2c", type=str),
+        community=request.form.get("community", default="public", type=str),
+        user=request.form.get("user", default=None, type=str),
+        auth_key=request.form.get("authentication_key", default=None, type=str),
+        priv_key=request.form.get("private_key", default=None, type=str)
     )
 
     snmp_enabled_hosts = scanner.scan_snmp()
@@ -62,27 +57,25 @@ def snmp_new():
 
 @app.route('/snmp/get', methods=['GET'])
 def snmp_get():
-    subnet = request.form.get("subnet", default=None, type=str)
-    version = request.form.get("version", default="v2c", type=str)
-    community = request.form.get("community", default="public", type=str)
-    user = request.form.get("user", default=None, type=str)
-    auth_key = request.form.get("authentication_key", default=None, type=str)
-    priv_key = request.form.get("private_key", default=None, type=str)
-
+    """
+    Snmp get endpoint
+    :return:
+    """
     scanner = SnmpController(
-        subnet=subnet,
-        version=version,
-        community=community,
-        user=user,
-        auth_key=auth_key,
-        priv_key=priv_key
+        target=request.form.get("subnet", default=None, type=str),
+        version=request.form.get("version", default="v2c", type=str),
+        community=request.form.get("community", default="public", type=str),
+        user=request.form.get("user", default=None, type=str),
+        auth_key=request.form.get("authentication_key", default=None, type=str),
+        priv_key=request.form.get("private_key", default=None, type=str)
     )
 
     result = scanner.execute(
         operation="get",
-        iod="1.3.6.1.2.1.1.1.0"
+        oid="1.3.6.1.2.1.1.1.0"
     )
     return jsonify({'status': result}), 200
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=5000)
